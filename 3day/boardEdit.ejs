@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <title>Document</title>
+</head>
+<body>
+    <div id="app">
+        <div>
+            <table>
+                <tr>
+                    <th>제목</th>
+                    <td><input v-model="info.title" type="text" ></td>
+                </tr>
+                <tr>
+                    <th>내용</th>
+                    <td><textarea v-model="info.contents" cols="30" rows="30"></textarea></td>
+                </tr>
+
+            </table>
+            <button @click="fnSave()">수정하기</button>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+     var app = new Vue({
+        el: '#app',
+        data: {
+            info : {},
+            title : "",
+            contents : "",
+            boardNo : "<%= map.boardNo %>"
+        },
+        methods: {
+            fnSave: async function () {
+                var self = this;
+                if(self.userId == ""){
+                    alert("로그인필요");
+                    return;
+                }
+                if(!confirm("정말 수정하겠습니까?")){
+                    return;
+                }
+                const response = await fetch(`http://localhost:3000/boardEdit.dox?title=${self.info.title}&contents=${self.info.contents}&boardNo=${self.boardNo}`);
+                const jsonData = await response.json();
+                if(jsonData.result == "success"){
+                    alert("저장되었습니다.");
+                    location.href = "/boardList";
+                }
+            },
+            fnList: async function () {
+                var self = this;
+                const response = await fetch(`http://localhost:3000/boardView.dox?boardNo=${self.boardNo}`);
+                const jsonData = await response.json();
+                self.info = jsonData;
+                console.log(jsonData);
+            }
+        },
+        created: function () {
+            var self = this;
+            self.fnList();
+            console.log(self.userId);
+        }
+    });
+</script>

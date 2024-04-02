@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+        <div>
+            <span>아이디: </span>
+            <input type="text" v-model="userId">
+        </div>
+        <div>
+            <span>비밀번호: </span>
+            <input type="text" v-model="userPwd">
+        </div>
+        <div>
+            <button @click="fnLogin()">로그인</button>
+        </div>
+    </div>
+</body>
+
+</html>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            userId: "",
+            userPwd: ""
+        },
+        methods: {
+            fnLogin: async function () {
+                var self = this;
+                const response = await fetch(`http://localhost:3000/userLogin.dox?userId=${self.userId}&userPwd=${self.userPwd}`);
+                const jsonData = await response.json();
+                if (jsonData.result == "success") {
+                    alert("로그인이 되었습니다.");
+                    location.href = "/boardList";
+                }else{
+                    
+                }
+            }
+        },
+        created: function () {
+            var self = this;
+        }
+    });
+</script>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <title>Document</title>
+    <style>
+        table,
+        th,
+        tr,
+        td {
+            border: 2px solid black;
+            border-collapse: collapse;
+            padding: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <table>
+            <tr>
+                <th>번호</th>
+                <th>제목</th>
+                <th>작성자</th>
+                <th>작성일</th>
+            </tr>
+            <tr v-for="item in list">
+                <td>{{item.boardNo}}</td>
+                <td><a href="javascript:;" @click="fnBoardView(item.boardNo)">{{item.title}}</a></td>
+                <td>{{item.userId}}</td>
+                <td>{{item.cdataTime}}</td>
+            </tr>
+        </table>
+        <div>
+            <button @click="fnAdd()">글쓰기</button>
+        </div>
+    </div>
+</body>
+
+</html>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            list: []
+        },
+        methods: {
+            fnList: async function () {
+                var self = this;
+                const response = await fetch(`http://localhost:3000/boardList.dox`);
+                const jsonData = await response.json();
+                self.list = jsonData;
+                console.log(jsonData);
+            },
+            fnBoardView: function (boardNo) {
+                location.href = "/boardView/" + boardNo;
+            },
+            fnAdd: function () {
+                location.href = "/boardAdd";
+            }
+
+        },
+        created: function () {
+            var self = this;
+            self.fnList();
+        }
+    });
+
+</script>
+​

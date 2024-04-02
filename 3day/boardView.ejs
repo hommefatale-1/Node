@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+        <div>
+            <table>
+                <tr>
+                    <th>게시글 번호</th>
+                    <td>{{info.boardNo}}</td>
+                </tr>
+                <tr>
+                    <th>제목</th>
+                    <td>{{info.title}}</td>
+                </tr>
+                <tr>
+                    <th>내용</th>
+                    <td>{{info.contents}}</td>
+                </tr>
+                <tr>
+                    <th>작성자</th>
+                    <td>{{info.userId}}</td>
+                </tr>
+                <tr>
+                    <th>작성일</th>
+                    <td>{{info.cdataTime}}</td>
+                </tr>
+            </table>
+            <button v-if=" info.userId == sessionId " @click="fnDelete()">삭제하기</button>
+            <button v-if=" info.userId == sessionId " @click="fnEdit()">수정하기</button>
+        </div>
+    </div>
+</body>
+
+</html>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            info: {},
+            boardNo: '<%= map.boardNo %>',
+            sessionId : "<%= map.sessionId %>"
+        },
+        methods: {
+            fnList: async function () {
+                var self = this;
+                const response = await fetch(`http://localhost:3000/boardView.dox?boardNo=${self.boardNo}`);
+                const jsonData = await response.json();
+                self.info = jsonData;
+                console.log(jsonData);
+            },
+            fnDelete: async function () {
+                var self = this;
+                if(!confirm("정말 삭제하겠습니까?")){
+                    return;
+                }
+                const response = await fetch(`http://localhost:3000/boardDelete.dox?boardNo=${self.boardNo}`);
+                const jsonData = await response.json();
+                console.log(jsonData);
+                if(jsonData.result == "success"){
+                    alert("삭제되었습니다.");
+                    location.href = "/boardList";
+                }
+            },
+            fnEdit : async function(){
+                location.href="/boardEdit/" + this.boardNo;
+            }
+        },
+        created: function () {
+            var self = this;
+            self.fnList();
+            console.log(self.sessionId);
+        }
+    });
+</script>

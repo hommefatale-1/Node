@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div>
+        <div>
+            <h1>회원검색</h1>
+            <input id="userId" type="text" value="<%= jsonData.userId %>" hidden>
+            <button onclick="fnSearch()">검색</button>
+        </div>
+        <div id="userInfo"> 
+            <div id="userId2"></div>
+            <div id="userName"></div>
+            <div id="userAddr"></div>
+        </div>
+        <hr>
+        <div>
+            <h1>회원등록</h1>
+            <div>
+                <input id="userId1" type="text" placeholder="아이디">
+            </div>
+            <div id="idcheck"></div>
+            <div>
+                <input id="userName1" type="text" placeholder="이름">
+            </div>
+            <div>
+                <input id="userAddr" type="text" placeholder="주소">
+            </div>
+
+        </div>
+        <div>
+
+            <button onclick="fnSave()">저장</button>
+        </div>
+    </div>
+</body>
+
+<script>
+    //정보 찾기
+    async function fnSearch() {
+        let userId = document.querySelector("#userId").value;
+        const response = await fetch(`http://localhost:3000/UserSearch?id=${userId}`);
+        if (!response.ok) {
+            throw new Error('서버 응답이 실패하였습니다.');
+        }
+        const jsonData = await response.json();
+        console.log(jsonData);
+        // 응답이 있을 경우 정보를 출력하고, 없을 경우 "데이터가 없습니다." 메시지를 출력합니다.
+        const userInfoDiv = document.querySelector("#userInfo");
+        // 응답이 있을 경우 정보를 출력합니다.
+        if (jsonData.length > 0) {
+            document.querySelector("#userId2").innerHTML = `아이디 : ${jsonData[0].userId}`;
+            document.querySelector("#userName").innerHTML = `이름 : ${jsonData[0].userName}`;
+            document.querySelector("#userAddr").innerHTML = `주소 : ${jsonData[0].addr}`;
+            userInfoDiv.style.display = "block"; // 데이터가 있을 때는 정보를 보여줍니다.
+        } else {
+            // 응답이 없을 경우 처리할 내용을 여기에 작성합니다.
+            document.querySelector("#userId2").innerHTML = `데이터가 없습니다.`;
+            userInfoDiv.style.display = "none"; // 데이터가 없을 때는 정보를 숨깁니다.
+                }
+    }
+    //아이디,이름,주소 저장
+    async function fnSave() {
+        let userId = document.querySelector("#userId1").value;
+        let userName = document.querySelector("#userName1").value;
+        let userAddr = document.querySelector("#userAddr").value;
+        const response = await fetch(`http://localhost:3000/insert?id=${userId}&name=${userName}&addr=${userAddr}`)
+        console.log(response);
+        if (!response.ok) {
+            throw new Error('서버 응답이 실패하였습니다.');
+        }
+        const jsonData = await response.json();
+        console.log(jsonData);
+
+    }
+</script>
