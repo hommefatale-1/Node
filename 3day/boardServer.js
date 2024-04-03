@@ -156,5 +156,18 @@ app.get('/boardDelete.dox', function (req, res) {
 
     });
 });
+app.get('/profile.dox', function (req, res) {
+    var map = req.query;
+    console.log(map);
+    connection.query(`SELECT * FROM TBL_SNS_USER S INNER JOIN TBL_BOARD B ON S.USERID =B.USERID WHERE S.USERID =?`,[map.userId], function (error, results, fields) {
+        if(error) throw error
+
+        if(results.length == 0){
+            res.send({result : "사용자없음"});
+        } else {
+            res.send(results[0]);
+        }
+    });
+});
 
 app.listen(4000);
