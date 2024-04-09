@@ -1,9 +1,11 @@
 const express = require('express');
 const session = require('express-session');
-var cors = require('cors');
+const bodyParser = require('body-parser');
 const app = express();
 const path = require('path');
+var cors = require('cors');
 app.use(cors());
+app.use(bodyParser.json());
 
 // 세션 미들웨어 설정
 app.use(session({
@@ -24,7 +26,7 @@ var connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: 'test1234',
-    database: 'test'
+    database: 'react_project'
 });
 connection.connect(function (err) {
     if (err) {
@@ -51,17 +53,18 @@ app.get('/boardAdd', function (req, res) {
 app.get('/userLogin.dox', function (req, res) {
     let map = req.query;
     console.log(map);
-    if (!map.userId || !map.userPwd) {
+    if (!map.userId || !map.password) {
         return res.status(400).send({ error: "Missing required parameters: userId, userPwd" });
     }
-    connection.query(`SELECT * FROM TBL_USER WHERE USERID = ? AND PWD = ?`, [map.userId, map.userPwd], function (error, results, fields) {
+    connection.query(`SELECT * FROM REACT_USERS WHERE USERID = ? AND PWD = ?`, [map.userId, map.password], function (error, results, fields) {
+        console.log(results);
         if (error || results.length === 0) {
             // 유저가 존재하지 않는 경우
             res.send({ result: "fail" });
         } else {
-            req.session.userId = map.userId; // 세션에 사용자 아이디 저장
-            // 유저가 존재하는 경우  
-            res.send({ result: "success" });
+            req.session.userId = results[0].userId; // 아이디
+            req.session.userName = results[0].userName; // 이름
+            res.send({ result: "success", userId: results[0] }); // map으로 넘기기
         }
     });
 })
@@ -69,9 +72,9 @@ app.get('/userLogin.dox', function (req, res) {
 app.get('/idCheck.dox', function (req, res) {
     let map = req.query;
     console.log(map);
-    connection.query(`SELECT * FROM TBL_USER WHERE USERID = ?`, [map.userId], function (error, results, fields) {
+    connection.query(`SELECT * FROM REACT_USERS WHERE userId = ?`, [map.userId], function (error, results, fields) {
         if (error) throw error
-        if(results.length === 0) {
+        if (!results || results.length === 0) {
             // 유저가 존재하지 않는 경우
             res.send({ result: "success" });
         } else {
@@ -79,8 +82,38 @@ app.get('/idCheck.dox', function (req, res) {
             res.send({ result: "fail" });
         }
     });
-})
+});
+app.post('/userSave.dox', function (req, res) { // 수정: POST 요청에 대한 핸들러로 변경
+    let userDataSend = req.body; // 수정: req.query 대신 req.body 사용
+    console.log(userDataSend);
+    connection.query("INSERT INTO REACT_USERS(userId, password, userName, email, phoneNumber, created_at, updated_at) VALUES(?, ?, ?, ?, ?, NOW(), NOW())", [userDataSend.userId, userDataSend.password, userDataSend.userName, userDataSend.email, userDataSend.phoneNumber], function (error, results, fields) {
+        if (error) {
+            console.error(error);
+            res.json({ result: "fail" }); // 실패 시 클라이언트에게 응답
+        } else {
+            console.log("Inserted successfully");
+            res.json({ result: "success" }); // 성공 시 클라이언트에게 응답
+        }
+    });
+});
+app.get('/profile.dox', function (req, res) {
+    var map = req.query;
+    console.log(map);
+    connection.query(`SELECT react_profiles.*, react_posts.*,
+    (SELECT COUNT(*) FROM react_posts WHERE react_posts.userId = react_profiles.userId) AS posts
+    FROM react_profiles
+    LEFT JOIN react_posts ON react_profiles.userId = react_posts.userId
+    WHERE react_profiles.userId = ?
+    GROUP BY react_profiles.profileNo, react_posts.postNo;`, [map.userId], function (error, results, fields) {
+        if (error) throw error;
 
+        if (results.length == 0) {
+            res.send({ result: "사용자없음" });
+        } else {
+            res.send(results);
+        }
+    });
+});
 app.get('/boardList.dox', function (req, res) {
     connection.query(`SELECT boardNo, title, userId, DATE_FORMAT(cdataTime, '%Y-%m-%d %p %h:%i') AS cdataTime FROM TBL_BOARD`, function (error, results, fields) {
         if (error) throw error;
@@ -156,18 +189,4 @@ app.get('/boardDelete.dox', function (req, res) {
 
     });
 });
-app.get('/profile.dox', function (req, res) {
-    var map = req.query;
-    console.log(map);
-    connection.query(`SELECT * FROM TBL_SNS_USER S INNER JOIN TBL_BOARD B ON S.USERID =B.USERID WHERE S.USERID =?`,[map.userId], function (error, results, fields) {
-        if(error) throw error
-
-        if(results.length == 0){
-            res.send({result : "사용자없음"});
-        } else {
-            res.send(results[0]);
-        }
-    });
-});
-
 app.listen(4000);
